@@ -1,11 +1,12 @@
 package SplitLand;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
 public class LandDivider implements Runnable {
     public enum Method {
-        BRUTE_FORCE, GREEDY_TECHNIQUE, EXACT_APPROACH;
+        BRUTE_FORCE, GREEDY_TECHNIQUE, EXACT_APPROACH
     }
 
     private final Land land;
@@ -23,29 +24,40 @@ public class LandDivider implements Runnable {
         this.running = false;
     }
 
+    public int getSplitCost() {
+        return this.splitCost;
+    }
+
     public void setSplitCost(int splitCost) {
         this.splitCost = splitCost;
+    }
+
+    public int getSplits() {
+        return this.splits;
+    }
+
+    public Method getMethod() {
+        return this.method;
     }
 
     public void setMethod(Method method) {
         this.method = method;
     }
 
-    public float bruteForceSplit(Land land) {
-        int solution = 0;
-        HashMap<int[][], Integer> possibilities = new HashMap<int[][], Integer>();
+
+    public ArrayList<LandPossibility> bruteForceSplit(Land land) {
+        ArrayList<LandPossibility> possibilities = new ArrayList<>();
         // split horizontally
-        splitLand(land, solution, 1, false, possibilities);
+        splitSingleLand(land, 1, false, possibilities);
 
         // calculate split cost
 
         //split vertically
-        splitLand(land, solution, 1, true, possibilities);
-
+        splitSingleLand(land, 1, true, possibilities);
 
         // calculate split cost
 
-        return solution;
+        return possibilities;
     }
 
     public float greedyApproachSplit(Land land) {
@@ -62,8 +74,54 @@ public class LandDivider implements Runnable {
      * @param {int}  splitIndex - Index at where it splits
      * @param {bool} side - true = vertical, false = horizontal
      */
-    private int splitLand(Land land, int solution, int splitIndex, boolean side, HashMap<int[][], Integer> possibilities) {
-//        System.out.println(splitIndex);
+    private ArrayList<LandPossibility> splitSingleLand(Land land, int splitIndex, boolean side, ArrayList<LandPossibility> possibilities) {
+        if ((splitIndex >= land.getWidth() && side) || (splitIndex >= land.getHeight() && !side)) {
+            return possibilities;
+        }
+
+        Land[] splitLands = new Land[2];
+
+        int splitSolution = 0;
+
+        // When split vertically
+        if (side == true) {
+            Land leftLand = land.divideVertically(0, splitIndex);
+            Land rightLand = land.divideVertically(splitIndex, land.getWidth());
+            splitLands[0] = leftLand;
+            splitLands[1] = rightLand;
+
+            splitSolution += leftLand.getLand()[leftLand.getWidth()-1][leftLand.getHeight()-1];
+            splitSolution += rightLand.getLand()[rightLand.getWidth()-1][rightLand.getHeight()-1];
+            splitSolution += this.splitCost * land.getWidth();
+        }
+        // When split horizontally
+        else {
+            Land topLand = land.divideHorizontally(0, splitIndex);
+            Land bottomLand = land.divideHorizontally(splitIndex, land.getHeight());
+            splitLands[0] = topLand;
+            splitLands[1] = bottomLand;
+
+            splitSolution += topLand.getLand()[topLand.getWidth()-1][topLand.getHeight()-1];
+            splitSolution += bottomLand.getLand()[bottomLand.getWidth()-1][bottomLand.getHeight()-1];
+            splitSolution += this.splitCost * land.getHeight();
+        }
+
+        LandPossibility possibility = new LandPossibility(splitIndex, side, splitSolution);
+        possibilities.add(possibility);
+
+        this.splits++;
+
+        System.out.println(Arrays.deepToString(splitLands[0].getLand()));
+        System.out.println(Arrays.deepToString(splitLands[1].getLand()));
+        System.out.println(possibility);
+        System.out.println("-----------------------");
+
+        // Divide by original land
+        return splitSingleLand(land, splitIndex + 1, side, possibilities);
+    }
+
+    private int splitMultipleLand(Land land, int solution, int splitIndex, boolean side, HashMap<int[][], Integer> possibilities) {
+        System.out.println(splitIndex);
 //        System.out.println(land.getHeight());
         if ((splitIndex >= land.getWidth() && side) || (splitIndex >= land.getHeight() && !side)) {
             return solution;
@@ -93,13 +151,56 @@ public class LandDivider implements Runnable {
         }
 
         // Divide inner lands
-        splitLand(splitLands[0], solution, splitIndex, true, possibilities);
-        splitLand(splitLands[0], solution, splitIndex, false, possibilities);
-        splitLand(splitLands[1], solution, splitIndex, true, possibilities);
-        splitLand(splitLands[1], solution, splitIndex, false, possibilities);
+        splitMultipleLand(splitLands[0], solution, splitIndex, true, possibilities);
+        splitMultipleLand(splitLands[0], solution, splitIndex, false, possibilities);
+        splitMultipleLand(splitLands[1], solution, splitIndex, true, possibilities);
+        splitMultipleLand(splitLands[1], solution, splitIndex, false, possibilities);
 
         // Divide by original land
-        return splitLand(land, solution, splitIndex + 1, side, possibilities);
+        return splitMultipleLand(land, solution, splitIndex + 1, side, possibilities);
+    }
+
+    private int splitLandGreedy(Land land, int solution, int splitIndex, boolean side, HashMap<int[][], Integer> memo) {
+        //        System.out.println(splitIndex);
+//        System.out.println(land.getHeight());09
+        if ((splitIndex >= land.getWidth() && side) || (splitIndex >= land.getHeight() && !side)) {
+            return solution;
+        }
+
+        Land[] splitLands = new Land[2];
+
+        // When split vertically
+        if (side == true) {
+            Land leftLand = land.divideVertically(0, splitIndex);
+            Land rightLand = land.divideVertically(splitIndex, land.getWidth());
+            splitLands[0] = leftLand;
+            splitLands[1] = rightLand;
+            System.out.println(Arrays.deepToString(leftLand.getLand()));
+            System.out.println(Arrays.deepToString(rightLand.getLand()));
+            System.out.println("-----------------------");
+        }
+        // When split horizontally
+        else {
+            Land topLand = land.divideHorizontally(0, splitIndex);
+            Land bottomLand = land.divideHorizontally(splitIndex, land.getHeight());
+            splitLands[0] = topLand;
+            splitLands[1] = bottomLand;
+            System.out.println(Arrays.deepToString(topLand.getLand()));
+            System.out.println(Arrays.deepToString(bottomLand.getLand()));
+            System.out.println("-----------------------");
+        }
+
+        this.splits++;
+
+        // Divide inner lands
+        splitLandGreedy(splitLands[0], solution, splitIndex, true, memo);
+        splitLandGreedy(splitLands[0], solution, splitIndex, false, memo);
+        splitLandGreedy(splitLands[1], solution, splitIndex, true, memo);
+        splitLandGreedy(splitLands[1], solution, splitIndex, false, memo);
+
+
+        // Divide by original land
+        return splitLandGreedy(land, solution, splitIndex + 1, side, memo);
     }
 
     private void runSplitLand(Method method) {
@@ -125,12 +226,15 @@ public class LandDivider implements Runnable {
     }
 
     public static void main(String[] args) {
-        LandDivider landDivider = new LandDivider(3, 3);
+        LandDivider landDivider = new LandDivider(4, 3);
         landDivider.setSplitCost(50);
         landDivider.setMethod(Method.BRUTE_FORCE);
         System.out.println(Arrays.deepToString(landDivider.land.getLand()));
         System.out.println("-----------------");
-        landDivider.bruteForceSplit(landDivider.getLand());
-//        landDivider.splitLand(landDivider.land, 0, 1, true);
+        System.out.println(landDivider.bruteForceSplit(landDivider.getLand()));
+        System.out.println("-----------------");
+        System.out.println(landDivider.getSplits());
+        System.out.println(landDivider.getSplitCost());
+        System.out.println("-----------------");
     }
 }
