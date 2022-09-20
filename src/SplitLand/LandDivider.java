@@ -43,7 +43,7 @@ public class LandDivider implements Runnable {
         splitLand(land, solution, 1, true, possibilities);
 
 
-        // calculate
+        // calculate split cost
 
         return solution;
     }
@@ -63,8 +63,8 @@ public class LandDivider implements Runnable {
      * @param {bool} side - true = vertical, false = horizontal
      */
     private int splitLand(Land land, int solution, int splitIndex, boolean side, HashMap<int[][], Integer> possibilities) {
-        System.out.println(splitIndex);
-        System.out.println(land.getHeight());
+//        System.out.println(splitIndex);
+//        System.out.println(land.getHeight());
         if ((splitIndex >= land.getWidth() && side) || (splitIndex >= land.getHeight() && !side)) {
             return solution;
         }
@@ -92,10 +92,14 @@ public class LandDivider implements Runnable {
             System.out.println("-----------------------");
         }
 
+        // Divide inner lands
+        splitLand(splitLands[0], solution, splitIndex + 1, true, possibilities);
+        splitLand(splitLands[0], solution, splitIndex + 1, false, possibilities);
+        splitLand(splitLands[1], solution, splitIndex + 1, true, possibilities);
+        splitLand(splitLands[1], solution, splitIndex + 1, false, possibilities);
 
-//        return splitLand(land, solution, splitIndex + 1, true, possibilities)
+        // Divide by original land
         return splitLand(land, solution, splitIndex + 1, side, possibilities);
-//        return solution;
     }
 
     private void runSplitLand(Method method) {
@@ -121,7 +125,7 @@ public class LandDivider implements Runnable {
     }
 
     public static void main(String[] args) {
-        LandDivider landDivider = new LandDivider(6, 6);
+        LandDivider landDivider = new LandDivider(3, 3);
         landDivider.setSplitCost(50);
         landDivider.setMethod(Method.BRUTE_FORCE);
         System.out.println(Arrays.deepToString(landDivider.land.getLand()));
