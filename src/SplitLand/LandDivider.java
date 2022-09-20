@@ -3,6 +3,7 @@ package SplitLand;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 
 public class LandDivider implements Runnable {
     public enum Method {
@@ -44,8 +45,13 @@ public class LandDivider implements Runnable {
         this.method = method;
     }
 
+    private void resetSplits() {
+        this.splits = 0;
+    }
+
 
     public ArrayList<LandPossibility> bruteForceSplit(Land land) {
+        resetSplits();
         ArrayList<LandPossibility> possibilities = new ArrayList<>();
         // split horizontally
         splitSingleLand(land, 1, false, possibilities);
@@ -61,7 +67,22 @@ public class LandDivider implements Runnable {
     }
 
     public float greedyApproachSplit(Land land) {
-        return 0.0f;
+        resetSplits();
+        HashMap<ArrayList<Integer>, Integer> memoizedLands = new HashMap<>();
+
+        int solution = Integer.MAX_VALUE;
+
+        int solution1 = splitLandGreedy(land, solution, 1, false, memoizedLands);
+        int solution2 = splitLandGreedy(land, solution, 1, true, memoizedLands);
+
+        if (solution > solution1) {
+            solution = solution1;
+        }
+        if (solution > solution2) {
+            solution = solution2;
+        }
+
+        return solution;
     }
 
     public float exactApproachSplit(Land land) {
@@ -90,8 +111,8 @@ public class LandDivider implements Runnable {
             splitLands[0] = leftLand;
             splitLands[1] = rightLand;
 
-            splitSolution += leftLand.getLand()[leftLand.getWidth()-1][leftLand.getHeight()-1];
-            splitSolution += rightLand.getLand()[rightLand.getWidth()-1][rightLand.getHeight()-1];
+            splitSolution += leftLand.getLand()[leftLand.getWidth() - 1][leftLand.getHeight() - 1];
+            splitSolution += rightLand.getLand()[rightLand.getWidth() - 1][rightLand.getHeight() - 1];
             splitSolution += this.splitCost * land.getWidth();
         }
         // When split horizontally
@@ -101,8 +122,8 @@ public class LandDivider implements Runnable {
             splitLands[0] = topLand;
             splitLands[1] = bottomLand;
 
-            splitSolution += topLand.getLand()[topLand.getWidth()-1][topLand.getHeight()-1];
-            splitSolution += bottomLand.getLand()[bottomLand.getWidth()-1][bottomLand.getHeight()-1];
+            splitSolution += topLand.getLand()[topLand.getWidth() - 1][topLand.getHeight() - 1];
+            splitSolution += bottomLand.getLand()[bottomLand.getWidth() - 1][bottomLand.getHeight() - 1];
             splitSolution += this.splitCost * land.getHeight();
         }
 
@@ -120,11 +141,11 @@ public class LandDivider implements Runnable {
         return splitSingleLand(land, splitIndex + 1, side, possibilities);
     }
 
-    private int splitMultipleLand(Land land, int solution, int splitIndex, boolean side, HashMap<int[][], Integer> possibilities) {
+    private ArrayList<LandPossibility> splitMultipleLand(Land land, int solution, int splitIndex, boolean side, ArrayList<LandPossibility> possibilities) {
         System.out.println(splitIndex);
 //        System.out.println(land.getHeight());
         if ((splitIndex >= land.getWidth() && side) || (splitIndex >= land.getHeight() && !side)) {
-            return solution;
+            return possibilities;
         }
 
         Land[] splitLands = new Land[2];
@@ -156,16 +177,32 @@ public class LandDivider implements Runnable {
         splitMultipleLand(splitLands[1], solution, splitIndex, true, possibilities);
         splitMultipleLand(splitLands[1], solution, splitIndex, false, possibilities);
 
+        this.splits++;
+
         // Divide by original land
         return splitMultipleLand(land, solution, splitIndex + 1, side, possibilities);
     }
 
-    private int splitLandGreedy(Land land, int solution, int splitIndex, boolean side, HashMap<int[][], Integer> memo) {
-        //        System.out.println(splitIndex);
-//        System.out.println(land.getHeight());09
+    /**
+     * Using Memoization to get current value
+     * by solving the previous solution
+     * and storing that solution when it is used again next time
+     */
+    private int splitLandGreedy(Land land, int solution, int splitIndex, boolean side, HashMap<ArrayList<Integer>, Integer> memo) {
         if ((splitIndex >= land.getWidth() && side) || (splitIndex >= land.getHeight() && !side)) {
             return solution;
         }
+
+        ArrayList<Integer> landArea = new ArrayList<>();
+        landArea.add(land.getWidth());
+        landArea.add(land.getHeight());
+
+        // if dimension of current land exists return from memo
+        if (memo.containsKey(landArea)) {
+            return memo.get(landArea);
+        }
+
+        int splitSolution = 0;
 
         Land[] splitLands = new Land[2];
 
@@ -175,9 +212,20 @@ public class LandDivider implements Runnable {
             Land rightLand = land.divideVertically(splitIndex, land.getWidth());
             splitLands[0] = leftLand;
             splitLands[1] = rightLand;
-            System.out.println(Arrays.deepToString(leftLand.getLand()));
-            System.out.println(Arrays.deepToString(rightLand.getLand()));
-            System.out.println("-----------------------");
+
+            int leftLandCost = leftLand.getLand()[leftLand.getWidth() - 1][leftLand.getHeight() - 1];
+            splitSolution += leftLandCost;
+            int rightLandCost = rightLand.getLand()[rightLand.getWidth() - 1][rightLand.getHeight() - 1];
+            splitSolution += rightLandCost;
+            splitSolution += this.splitCost * land.getWidth();
+            ArrayList<Integer> leftLandDimensions = new ArrayList<>();
+            leftLandDimensions.add(leftLand.getWidth());
+            leftLandDimensions.add(leftLand.getHeight());
+            ArrayList<Integer> rightLandDimensions = new ArrayList<>();
+            rightLandDimensions.add(rightLand.getWidth());
+            rightLandDimensions.add(rightLand.getHeight());
+            memo.put(leftLandDimensions, leftLandCost);
+            memo.put(rightLandDimensions, rightLandCost);
         }
         // When split horizontally
         else {
@@ -185,12 +233,28 @@ public class LandDivider implements Runnable {
             Land bottomLand = land.divideHorizontally(splitIndex, land.getHeight());
             splitLands[0] = topLand;
             splitLands[1] = bottomLand;
-            System.out.println(Arrays.deepToString(topLand.getLand()));
-            System.out.println(Arrays.deepToString(bottomLand.getLand()));
-            System.out.println("-----------------------");
+
+            int topLandCost = topLand.getLand()[topLand.getWidth() - 1][topLand.getHeight() - 1];
+            splitSolution += topLandCost;
+            int bottomLandCost = bottomLand.getLand()[bottomLand.getWidth() - 1][bottomLand.getHeight() - 1];
+            splitSolution += bottomLandCost;
+            splitSolution += this.splitCost * land.getHeight();
+            ArrayList<Integer> topLandDimensions = new ArrayList<>();
+            topLandDimensions.add(topLand.getWidth());
+            topLandDimensions.add(topLand.getHeight());
+            ArrayList<Integer> bottomLandDimensions = new ArrayList<>();
+            bottomLandDimensions.add(bottomLand.getWidth());
+            bottomLandDimensions.add(bottomLand.getHeight());
+            memo.put(topLandDimensions, topLandCost);
+            memo.put(bottomLandDimensions, bottomLandCost);
         }
 
         this.splits++;
+
+        // evaluate if new solution is better than prev
+        if (solution > splitSolution) {
+            solution = splitSolution;
+        }
 
         // Divide inner lands
         splitLandGreedy(splitLands[0], solution, splitIndex, true, memo);
@@ -198,6 +262,7 @@ public class LandDivider implements Runnable {
         splitLandGreedy(splitLands[1], solution, splitIndex, true, memo);
         splitLandGreedy(splitLands[1], solution, splitIndex, false, memo);
 
+        System.out.println(memo);
 
         // Divide by original land
         return splitLandGreedy(land, solution, splitIndex + 1, side, memo);
@@ -228,10 +293,11 @@ public class LandDivider implements Runnable {
     public static void main(String[] args) {
         LandDivider landDivider = new LandDivider(4, 3);
         landDivider.setSplitCost(50);
-        landDivider.setMethod(Method.BRUTE_FORCE);
+        landDivider.setMethod(Method.GREEDY_TECHNIQUE);
         System.out.println(Arrays.deepToString(landDivider.land.getLand()));
         System.out.println("-----------------");
-        System.out.println(landDivider.bruteForceSplit(landDivider.getLand()));
+//        System.out.println(landDivider.bruteForceSplit(landDivider.getLand()));
+        System.out.println(landDivider.greedyApproachSplit(landDivider.getLand()));
         System.out.println("-----------------");
         System.out.println(landDivider.getSplits());
         System.out.println(landDivider.getSplitCost());

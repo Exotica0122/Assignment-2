@@ -20,6 +20,7 @@ public class Land {
     public Land(int width, int height) {
         this.width = width;
         this.height = height;
+        this.landArea = width * height;
         this.land = new int[width][height];
         evaluateLandCost();
         addCostsToLand(land);
@@ -56,6 +57,10 @@ public class Land {
 
     public int[][] getLandCost() {
         return landCost;
+    }
+
+    public int getLandArea() {
+        return this.landArea;
     }
 
     public int getWidth() {
