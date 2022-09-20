@@ -1,3 +1,10 @@
+/**
+ * @NOTE: the land looking at it visually
+ * from code.
+ * Left - Right is the height (inner array)
+ * Top - Bottom is the width (outer array)
+ */
+
 package SplitLand;
 
 import java.util.Arrays;
@@ -18,15 +25,7 @@ public class Land {
         addCostsToLand(land);
     }
 
-    public Land(int[][] land) {
-        this.width = land.length;
-        this.height = land[0].length;
-        this.land = new int[width][height];
-        evaluateLandCost();
-        addCostsToLand(land);
-    }
-
-    public Land divideHorizontally(int start, int end) {
+    public Land divideVertically(int start, int end) {
         int newWidth = end - start;
         Land dividedLand = new Land(newWidth, this.height);
 //        int[][] dividedLand = new int[newWidth][this.height];
@@ -38,7 +37,7 @@ public class Land {
         return dividedLand;
     }
 
-    public Land divideVertically(int start, int end) {
+    public Land divideHorizontally(int start, int end) {
         int newHeight = end - start;
         Land dividedLand = new Land(this.width, newHeight);
 //        int[][] dividedLand = new int[this.width][newWidth];
@@ -88,18 +87,18 @@ public class Land {
 
 
     public static void main(String[] args) {
-        Land land = new Land(6, 6);
+        Land land = new Land(5, 6);
         int[][] intLand = land.land;
 
-        Land verticalLand = land.divideVertically(0, 1);
-        Land verticalLand2 = land.divideVertically(1, land.width);
-//        Land horizontalDivide = land.divideHorizontally(0, 2);
-//        Land horizontalDivide2 = land.divideHorizontally(2, land.height);
+//        Land verticalLand = land.divideVertically(0, 1);
+//        Land verticalLand2 = land.divideVertically(1, land.width);
+        Land horizontalDivide = land.divideHorizontally(0, 2);
+        Land horizontalDivide2 = land.divideHorizontally(2, land.height);
 
-//        System.out.println(Arrays.deepToString(intLand));
-        System.out.println(Arrays.deepToString(verticalLand.getLand()));
-        System.out.println(Arrays.deepToString(verticalLand2.getLand()));
-//        System.out.println(Arrays.deepToString(horizontalDivide.getLand()));
-//        System.out.println(Arrays.deepToString(horizontalDivide2.getLand()));
+        System.out.println(Arrays.deepToString(intLand));
+//        System.out.println(Arrays.deepToString(verticalLand.getLand()));
+//        System.out.println(Arrays.deepToString(verticalLand2.getLand()));
+        System.out.println(Arrays.deepToString(horizontalDivide.getLand()));
+        System.out.println(Arrays.deepToString(horizontalDivide2.getLand()));
     }
 }

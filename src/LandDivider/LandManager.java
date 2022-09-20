@@ -2,6 +2,7 @@ package LandDivider;
 
 import java.awt.Graphics;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -15,7 +16,7 @@ public final class LandManager implements Runnable {
     }
     private final Land land;
     private final Method method;
-    final double splitCost = 50;//Cost for every subdivision... Split is directly proportional to the length of the subdivision
+    final double splitCost = 10;//Cost for every subdivision... Split is directly proportional to the length of the subdivision
     private double solution;
     private boolean running;
     private int splits = 0;
@@ -111,6 +112,8 @@ public final class LandManager implements Runnable {
             }
         }
 
+        System.out.println(Arrays.deepToString(landMasses.get(0).getLand()));
+        System.out.println(Arrays.deepToString(landMasses.get(1).getLand()));
         System.out.println(possibilities);
 
         splits++;
