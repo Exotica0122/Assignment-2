@@ -93,10 +93,10 @@ public class LandDivider implements Runnable {
         }
 
         // Divide inner lands
-        splitLand(splitLands[0], solution, splitIndex + 1, true, possibilities);
-        splitLand(splitLands[0], solution, splitIndex + 1, false, possibilities);
-        splitLand(splitLands[1], solution, splitIndex + 1, true, possibilities);
-        splitLand(splitLands[1], solution, splitIndex + 1, false, possibilities);
+        splitLand(splitLands[0], solution, splitIndex, true, possibilities);
+        splitLand(splitLands[0], solution, splitIndex, false, possibilities);
+        splitLand(splitLands[1], solution, splitIndex, true, possibilities);
+        splitLand(splitLands[1], solution, splitIndex, false, possibilities);
 
         // Divide by original land
         return splitLand(land, solution, splitIndex + 1, side, possibilities);
